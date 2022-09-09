@@ -1,0 +1,31 @@
+version: "3.8"  # optional since v1.27.0
+services:
+  mysqldb:
+    #platform: linux/x86_64
+    image: mysql:5.7
+    restart: always
+    env_file: ./.env
+    environment:
+      MYSQL_HOST: $DB_HOST
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $MYSQLDB_ROOT_PASSWORD
+      MYSQL_DBNAME: $MYSQLDB_DATABASE
+      command: mysqladmin create todo4
+    ports:
+      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+    volumes:
+      - /var/database/docker/common:/var/lib/mysql
+  backend:
+    depends_on:
+      - mysqldb
+    build: .
+    ports:
+      - $PORT:$PORT
+    volumes:
+      # - backend-data:/apps
+      - .:/skyshi
+      - /skyshi/node_modules
+    environment:
+      - DB_HOST=mysqldb
+    tty: true
+    stdin_open: true
