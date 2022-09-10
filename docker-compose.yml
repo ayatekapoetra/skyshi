@@ -1,26 +1,39 @@
 version: "3.8"  # optional since v1.27.0
 services:
   mysqldb:
-    #platform: linux/x86_64
+    platform: linux/x86_64
     image: mysql:5.7
+    container_name: mysqldb
     restart: always
-    env_file: ./.env
     environment:
-      MYSQL_HOST: $DB_HOST
-      MYSQL_USER: $DB_USER
-      MYSQL_PASSWORD: $MYSQLDB_ROOT_PASSWORD
-      MYSQL_DBNAME: $MYSQLDB_DATABASE
-      command: mysqladmin create todo4
+      MYSQL_ROOT_PASSWORD: db123
+      MYSQL_DATABASE: todo4
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user123
     ports:
-      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
+      - "8090:3306"
     volumes:
-      - /var/database/docker/common:/var/lib/mysql
+      - dbdata:/var/lib/mysql
+    # volumes:
+    #   - /var/database/docker/common:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma
+    links:
+      - mysqldb
+    environment:
+      PMA_HOST: mysqldb
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
   backend:
     depends_on:
       - mysqldb
     build: .
     ports:
-      - $PORT:$PORT
+      - "3030:3030"
     volumes:
       # - backend-data:/apps
       - .:/skyshi
@@ -29,3 +42,5 @@ services:
       - DB_HOST=mysqldb
     tty: true
     stdin_open: true
+volumes:
+  dbdata:
